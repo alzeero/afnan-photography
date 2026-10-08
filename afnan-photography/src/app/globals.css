@@ -1,0 +1,380 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Afnan Photography — design tokens
+   Values are "H S% L%" triplets, used as hsl(var(--x) / alpha).
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* Silk colors: for anything placed directly on the silk background.
+       They are identical in both themes because the silk never changes. */
+    --ink: 0 0% 0%; /* the logo's own black */
+    --ink-soft: 0 0% 22%;
+    --ink-mute: 0 0% 35%;
+    --bronze: 36 46% 31%; /* gold that stays legible (5:1) on the silk */
+    --champagne: 38 46% 64%; /* decorative gold for lines and dark panels */
+    --champagne-light: 39 55% 76%;
+    --sand: 38 40% 88%;
+    --noir: 0 0% 0%;
+    --on-noir: 0 0% 100%;
+
+    /* Surface colors (cards, menus, dialogs, admin panels): light theme —
+       white pearl surfaces, black type, black primary buttons. */
+    --surface: 0 0% 100%;
+    --on-surface: 0 0% 0%;
+    --on-surface-soft: 0 0% 22%;
+    --on-surface-mute: 0 0% 35%;
+    --accent: 36 46% 31%;
+    --line: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-fg: 0 0% 100%;
+    --danger: 0 60% 42%;
+    --danger-fg: 0 0% 100%;
+    --success: 152 52% 27%;
+    --glass-alpha: 0.64;
+    --glass-edge: 0 0% 100% / 0.8;
+  }
+
+  .dark {
+    /* Dark theme — the silk stays exactly as it is; only the surfaces turn
+       black, with white type and champagne-gold accents. */
+    --surface: 0 0% 3%;
+    --on-surface: 0 0% 100%;
+    --on-surface-soft: 0 0% 82%;
+    --on-surface-mute: 0 0% 68%;
+    --accent: 39 55% 72%;
+    --line: 0 0% 100%;
+    --primary: 38 46% 64%;
+    --primary-fg: 0 0% 0%;
+    --danger: 0 78% 70%;
+    --danger-fg: 0 0% 0%;
+    --success: 152 45% 62%;
+    --glass-alpha: 0.92;
+    --glass-edge: 0 0% 100% / 0.1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Arabic needs taller lines than Latin to read comfortably. */
+  html[dir="rtl"] {
+    line-height: 1.8;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100svh;
+    /* The silk's own average tone, shown only for the instant before the
+       background image paints. */
+    background-color: #efefef;
+    color: hsl(var(--ink));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  img {
+    -webkit-user-drag: none;
+  }
+
+  /* Anchor jumps land below the floating navigation. */
+  [id] {
+    scroll-margin-top: 104px;
+  }
+
+  ::selection {
+    background-color: hsl(var(--champagne) / 0.45);
+    color: hsl(var(--ink));
+  }
+
+  /* Two-tone focus ring: a white halo plus a bronze outline, so keyboard
+     focus is visible on the silk, on white cards and on black panels alike. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--bronze));
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px hsl(0 0% 100% / 0.85);
+  }
+
+  /* iOS Safari paints its own chrome on form controls; strip it in the
+     admin area, the only place with real form controls. */
+  .dashboard-root input,
+  .dashboard-root textarea,
+  .dashboard-root select,
+  .dashboard-root button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+
+@layer components {
+  /* The client's silk photograph, shown exactly as supplied behind every
+     page. A fixed layer (not background-attachment: fixed, which iOS
+     ignores) sized to the large viewport so it never jumps when mobile
+     browser bars slide in and out. A slight overscan keeps the image's very
+     edge rows out of view at every screen ratio. */
+  .silk-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    height: 100lvh;
+    z-index: -1;
+    pointer-events: none;
+    background-color: #efefef;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: scale(1.04);
+    transform-origin: 50% 50%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .silk-backdrop {
+      will-change: transform;
+      animation: silk-drift 46s ease-in-out infinite alternate;
+    }
+  }
+
+  /* Blurred surface for things that float over moving content: the
+     navigation capsule, the mobile menu, dialogs. */
+  .glass {
+    background-color: hsl(var(--surface) / var(--glass-alpha));
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(18px) saturate(1.15);
+    border: 1px solid hsl(var(--glass-edge));
+    color: hsl(var(--on-surface));
+    transition:
+      background-color 0.5s ease,
+      border-color 0.5s ease,
+      color 0.5s ease;
+  }
+
+  /* Calm translucent surface (no blur) for large static areas such as the
+     admin panels — cheaper to render while scrolling on phones. */
+  .panel {
+    background-color: hsl(var(--surface) / calc(var(--glass-alpha) + 0.12));
+    border: 1px solid hsl(var(--glass-edge));
+    color: hsl(var(--on-surface));
+    transition:
+      background-color 0.5s ease,
+      border-color 0.5s ease,
+      color 0.5s ease;
+  }
+
+  /* A photograph mounted like a print: an even mat around the image and a
+     contact shadow on the silk. White mat in light, black mount in dark. */
+  .print {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 6px;
+    background-color: hsl(var(--surface));
+    box-shadow: theme("boxShadow.print");
+    transition:
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.5s ease;
+  }
+
+  @media (min-width: 768px) {
+    .print {
+      padding: 9px;
+    }
+  }
+
+  @media (hover: hover) {
+    .print:hover {
+      transform: translateY(-4px);
+      box-shadow: theme("boxShadow.print-lift");
+    }
+  }
+
+  /* Stationery card for client words: card stock with a fine gold inner
+     border, like a printed thank-you note. */
+  .note {
+    position: relative;
+    background-color: hsl(var(--surface));
+    color: hsl(var(--on-surface));
+    border-radius: 3px;
+    box-shadow: theme("boxShadow.note");
+    transition:
+      background-color 0.5s ease,
+      color 0.5s ease;
+  }
+
+  .note::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border: 1px solid hsl(var(--accent) / 0.3);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  /* The darkroom: the one black panel on the page, arched at the top like a
+     window, with the silk faintly visible through it. */
+  .darkroom {
+    position: relative;
+    isolation: isolate;
+    background-color: hsl(var(--noir) / 0.9);
+    color: hsl(var(--on-noir));
+    border-radius: 50% 50% 22px 22px / 72px 72px 22px 22px;
+  }
+
+  .darkroom::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    z-index: -1;
+    border: 1px solid hsl(var(--champagne) / 0.35);
+    border-radius: 50% 50% 15px 15px / 64px 64px 15px 15px;
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    .darkroom {
+      border-radius: 50% 50% 28px 28px / 150px 150px 28px 28px;
+    }
+    .darkroom::before {
+      inset: 12px;
+      border-radius: 50% 50% 18px 18px / 140px 140px 18px 18px;
+    }
+  }
+
+  /* On permanently black areas (booking panel, photo viewer) the focus ring
+     switches to champagne without the white halo. */
+  .darkroom :focus-visible,
+  .on-dark :focus-visible {
+    outline-color: hsl(var(--champagne));
+    box-shadow: none;
+  }
+
+  /* Hairline in gold that fades out at both ends. */
+  .hairline-gold {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--champagne)) 28%,
+      hsl(var(--bronze) / 0.85) 50%,
+      hsl(var(--champagne)) 72%,
+      transparent
+    );
+  }
+
+  /* Underlined text link whose underline draws back on hover. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 100% 1px;
+    background-position: 100% 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 0.2em;
+    transition: background-size 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .link-underline:hover {
+    background-size: 0% 1px;
+    background-position: 0% 100%;
+  }
+
+  [dir="rtl"] .link-underline {
+    background-position: 0% 100%;
+  }
+
+  [dir="rtl"] .link-underline:hover {
+    background-position: 100% 100%;
+  }
+
+  /* Silk sheen: on hover, a soft band of light slides across a button, the
+     way light travels over satin. */
+  .btn-sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .btn-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 25%, hsl(0 0% 100% / 0.3) 48%, transparent 70%);
+    transform: translateX(-130%);
+    transition: transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .btn-sheen:hover::after {
+      transform: translateX(130%);
+    }
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Always-on rules (outside Tailwind layers, so they are never purged and
+   always win over utilities)
+   ========================================================================== */
+
+/* Letter-spacing of any amount breaks Arabic's joined letterforms, so it is
+   reset everywhere inside right-to-left content. Latin-only bits that want
+   their tracking (the brand line, the "EN" toggle) opt out with `.latin`. */
+[dir="rtl"],
+[dir="rtl"] *:not(.latin) {
+  letter-spacing: normal !important;
+}
+
+@keyframes silk-drift {
+  from {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.1) translate3d(-1.2%, -1.4%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
